@@ -18,4 +18,5 @@ void two_vector(char *sequence, int n, cell **preprocessed_table, int **tracebac
 */
 void preprocess(int group_size, cell ****preprocessed_table);
 
+void print_preprocessing_table(cell ***table, int dimension);
 #endif /* !defined(_FOLDINGC_H_) */

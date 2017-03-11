@@ -25,15 +25,15 @@ int get_kth_bit(int v, int k) {
   return ((v & ( 1 << k )) >> k);
 }
 
-void update_max(cell *preprocessing_cell, int v1, int v2, int table_dimension) {
+void update_max(cell *preprocessing_cell, int horizontal_diff_vec, int vertical_diff_vec, int table_dimension) {
   int max_value = 0; 
   int max_index = 0;
   int sum_1 = 0;
   int sum_2 = 0;
   int k;
   for (k = 0; k < table_dimension; k++) {
-    sum_1 += get_kth_bit(v1, k);
-    sum_2 += get_kth_bit(v2, k);
+    sum_1 += get_kth_bit(horizontal_diff_vec, k);
+    sum_2 += get_kth_bit(vertical_diff_vec, k) * -1;
     if ((sum_1 + sum_2) > max_value) {
       max_value = sum_1 + sum_2;
       max_index = k;
@@ -44,7 +44,7 @@ void update_max(cell *preprocessing_cell, int v1, int v2, int table_dimension) {
 }
 
 void preprocess(int group_size, cell ****preprocessed_table) {
-  // with table_dimension being an int, this effectively restrict group_size to be 1 to 64
+  // with table_dimension being an int, this effectively restricts group_size to be 1 to 64
   int table_dimension = pow(2, group_size);
   int i, j;
   cell ***table = initialize_preprocessing_table(table_dimension);

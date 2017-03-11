@@ -12,6 +12,10 @@ typedef struct cell {
 
 void two_vector(char *sequence, int n, cell **preprocessed_table, int **traceback_table, int **score);
 
-void preprocess(int group_size, cell **preprocessed_table);
+/*
+  group_size: the size of the preprocessing group 
+  preprocessed_table: the resulting preprocessing table
+*/
+void preprocess(int group_size, cell ****preprocessed_table);
 
 #endif /* !defined(_FOLDINGC_H_) */

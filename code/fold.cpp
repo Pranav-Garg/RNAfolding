@@ -24,7 +24,9 @@ void print_usage() {
 }
 
 void test_preprocessed_table() {
-  
+  cell ***preprocessed_table;
+  preprocess(2, &preprocessed_table);  
+  printf("test: %d\n", preprocessed_table[0][0]->max_value); 
 }
 
 void get_rna_file_dimension(char *first_line, int *row_count, int *column_count) {
@@ -54,6 +56,7 @@ void read_sequence_from_file(char **sequence, char *file_path) {
   - first argument is
     -> 1: Nussinov
     -> 2: Two Vector
+    -> 3: Testing
   - second argument is
     -> path to file containing the RNA sequence
 */
@@ -63,8 +66,13 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
     print_usage();
   }
   else {
+    int first_argument = atoi(arguments[1]);
+    char *second_argument = arguments[2];
+    if (first_argument == 3) {
+      test_preprocessed_table();
+    }
     char *sequence;
-    read_sequence_from_file(&sequence, arguments[2]);
+    read_sequence_from_file(&sequence, second_argument);
     printf("read sequence: %s", sequence);
   }
 }

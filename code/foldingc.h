@@ -10,7 +10,7 @@ typedef struct cell {
   int max_index;
 } cell;
 
-void two_vector(char *sequence, int n, cell **preprocessed_table, int **traceback_table, int **score);
+void two_vector(char *sequence, int sequence_length, int group_size, int ***traceback_table, int ***score_table);
 
 /*
   group_size: the size of the preprocessing group 
@@ -19,4 +19,6 @@ void two_vector(char *sequence, int n, cell **preprocessed_table, int **tracebac
 void preprocess(int group_size, cell ****preprocessed_table);
 
 void print_preprocessing_table(cell ***table, int dimension);
+
+void test_helpers();
 #endif /* !defined(_FOLDINGC_H_) */

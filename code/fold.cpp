@@ -61,12 +61,24 @@ void test_preprocessed_table() {
   }
 }
 
+void test_two_vector() {
+  // test helper methods
+  test_helpers();
+
+  char *sequence = (char *) "UACGCGUCAAUAACGCUA";
+  int sequence_length = 18;
+  int group_size = 5;
+  int **traceback_table;
+  int **score_table;
+  two_vector(sequence, sequence_length, group_size, &traceback_table, &score_table);
+}
+
 void get_rna_file_dimension(char *first_line, int *row_count, int *column_count) {
   sscanf(first_line, "%d %d", row_count, column_count);
   printf("reading RNA Sequence file, row count: %d, column count: %d\n", *row_count, *column_count);
 }
 
-void read_sequence_from_file(char **sequence, char *file_path) {
+void read_sequence_from_file(char **sequence, int *sequence_length, char *file_path) {
   FILE* file = fopen(file_path, "r");
   int line_count;
   int line_size;
@@ -81,6 +93,7 @@ void read_sequence_from_file(char **sequence, char *file_path) {
   }
   fclose(file);
   *sequence = read_buffer;
+  *sequence_length = (int) strlen(read_buffer);
 }
 
 /*
@@ -98,13 +111,21 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
     print_usage();
   }
   else {
-    int first_argument = atoi(arguments[1]);
-    char *second_argument = arguments[2];
-    if (first_argument == 3) {
-      test_preprocessed_table();
-    }
+    int option = atoi(arguments[1]);
+    char *file_path = arguments[2];
     char *sequence;
-    read_sequence_from_file(&sequence, second_argument);
-    printf("read sequence: %s", sequence);
+    int sequence_length;
+    read_sequence_from_file(&sequence, &sequence_length, file_path);
+    if (option == 3) {
+      test_preprocessed_table();
+      test_two_vector();
+    }
+    else if (option == 2) {
+    
+    }
+    else if (option == 1) {
+
+    }
+    free(sequence);
   }
 }

@@ -115,13 +115,25 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
     char *file_path = arguments[2];
     char *sequence;
     int sequence_length;
+    
+    int **traceback_table;
+    int **score_table;
+    
+    
     read_sequence_from_file(&sequence, &sequence_length, file_path);
     if (option == 3) {
       test_preprocessed_table();
       test_two_vector();
     }
     else if (option == 2) {
-    
+      int group_size = log(sequence_length);
+      if(group_size ==0){
+        group_size =1;
+      }
+      two_vector(sequence, sequence_length, group_size, &traceback_table, &score_table);
+      print_tables(sequence_length, score_table, traceback_table);
+      
+      printf("Best folding score is: %d\n", score_table[0][sequence_length-1]);
     }
     else if (option == 1) {
 

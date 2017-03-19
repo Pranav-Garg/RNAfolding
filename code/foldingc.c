@@ -25,6 +25,16 @@ int get_kth_bit(unsigned int v, int k) {
   return ((v & ( 1 << k )) >> k);
 }
 
+int binary_to_decimal(int *a, int length){
+  int dec = 0;
+  int i;
+  for(i=0; i<length; i++){
+    dec = dec & (a[length -1 -i] << i);
+  }
+  
+  return dec;
+}
+
 void print_preprocessing_table(cell ***table, int dimension) {
   int i, j;
   printf("%s\n", "------ debug ------");
@@ -67,6 +77,29 @@ int get_current_group_right_bound(int row_index, int column_index, int group_siz
   int group_column_index = get_group_column_index(column_index, group_size);
   int right_bound = (group_column_index * group_size) + (group_size - 1);
   return min(right_bound, sequence_length - 1);
+}
+
+char complement(char c){
+  if(c=='A')
+    return 'U';
+  if(c=='C')
+    return 'G';
+  if(c=='G')
+    return 'C';
+  if(c=='U')
+    return 'A';
+}
+
+void compare(int *list, int length, int *value, int *argument){
+  int i;
+  *value = list[0];
+  *argument = 0;
+  for(i=1; i<length; i++){
+    if(list[i]>*value){
+      *value = list[i];
+      *argument = i;
+    }
+  }
 }
 
 /**
@@ -142,7 +175,7 @@ void preprocess(int group_size, cell ****preprocessed_table) {
 
 // assume this simple scoring scheme for now TODO
 int get_binding_score(char *sequence, int i, int j) {
-  if (sequence[i] == sequence[j]) {
+  if (sequence[i] == complement(sequence[j])) {
     return 1;
   }
   return 0;
@@ -163,16 +196,62 @@ void two_vector(char *sequence, int sequence_length, int group_size, int ***trac
   int **traceback = initialize_square_table(sequence_length);
   int **score = initialize_square_table(sequence_length);
   
-  int i, j;
+  int i, j, k, l, m;
+  
+  int *row_difference_vector = (int *)malloc((group_size-1)*sizeof(int));
+  int *col_difference_vector = (int *)malloc((group_size-1)*sizeof(int));
+  
+  int straggler_number, group_number;  //straggler_number is number of cells that don't form groups in each row/column. 
+                                       //group_number is number of groups
+  int cells_to_compare;    //for each cell [i][j], this indicates how far it is from the diagonal
+  int *comparison_list = (int *)malloc(sequence_length*sizeof(int));
+  int *traceback_list = (int *)malloc(sequence_length*sizeof(int));
+  int add_to_rowvect, add_to_colvect;  //These contain the first entry in each row/col vector before making it binary
+  cell best_cell;  //stores answer from preprocessing table
+  int *arg = (int *)malloc(sizeof(int));
+  int *val = (int *)malloc(sizeof(int));    //stores maximum value and argument index from comparing
+  
   for (j = 0; j < sequence_length; j++) {
     score[j][j] = 0;
     score[min(j+1, sequence_length - 1)][j] = 0;
+    traceback[j][j] = -2;
     for (i = j - 1; i >= 0; i--) {
       score[i][j] = get_binding_score(sequence, i, j) + score[i+1][j-1]; // assume score to be 1 for now 
       // TODO
+      cells_to_compare = (j-i-1);
+      straggler_number = cells_to_compare%group_size;
+      group_number = cells_to_compare/group_size;
+      for(k=1; k<=straggler_number; k++){
+        //k is the index used to traverse the row and column simultaneously. k=1 is just next to the diagonal
+        comparison_list[k] = score[i][i+k] + score[i+k][j];
+        traceback_list[k] = k;
+      }
+      for(m = 0; m< group_number; m++){
+        
+        add_to_rowvect = score[i][i+k];
+    	  add_to_colvect = score[i+k][j];
+        
+		    for(l=0; l<group_size-1; l++){
+		      row_difference_vector[l] = score[i][i+k+1+l]-score[i][i+k+l];
+          col_difference_vector[l] = (score[i+k+1+l][j]-score[i+k+l][j])*-1;
+    	  }
+    	
+		    best_cell = *preprocessed_table[binary_to_decimal(row_difference_vector, group_size -1)][binary_to_decimal(col_difference_vector, group_size -1)];
+        comparison_list[straggler_number + 1+m] = best_cell.max_value + add_to_rowvect + add_to_colvect;
+        traceback_list[ straggler_number + 1+m] = best_cell.max_index + k;
+    	
+        k+=group_size;
+	    }
+      comparison_list[0] = score[i][j];
+      traceback_list[0] = -1;
+      compare(comparison_list, straggler_number+group_number+1, val, arg);
+      score[i][j] = *val;
+      traceback[i][j] = traceback_list[*arg];
+    
     }   
   }  
-
+  *score_table = score;
+  *traceback_table = traceback;
   // free preprocessed table memory
   free_preprocessed_table(preprocessed_table, preprocessed_table_dimension);
 }
@@ -180,6 +259,30 @@ void two_vector(char *sequence, int sequence_length, int group_size, int ***trac
 /**
  *  TESTS
  */
+
+
+void print_tables(int sequence_length, int **score_table, int **traceback_table){
+  printf("\n----Score Table----\n");
+  int i,j;
+  for(i=0; i<sequence_length; i++){
+    for(j=0; j<sequence_length; j++){
+      printf("%d\t", score_table[i][j]);
+    }
+    printf("\n");
+  }
+  printf("\n----End of Score Table----\n");
+  printf("\n----Traceback Table----\n");
+  
+  for(i=0; i<sequence_length; i++){
+    for(j=0; j<sequence_length; j++){
+      printf("%d\t", traceback_table[i][j]);
+    }
+    printf("\n");
+  }
+  
+  printf("\n----End of Traceback Table----\n");
+  
+}
 
 void test_helpers() {
   // test get_kth_bit(unsigned int v, unsigned int k)

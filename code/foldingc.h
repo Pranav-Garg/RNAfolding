@@ -21,4 +21,6 @@ void preprocess(int group_size, cell ****preprocessed_table);
 void print_preprocessing_table(cell ***table, int dimension);
 
 void test_helpers();
+void print_tables(int sequence_length, int **score_table, int **traceback_table);
+int **initialize_square_table(int length);
 #endif /* !defined(_FOLDINGC_H_) */

@@ -5,6 +5,10 @@
 #define MAXLINE 1024
 #endif
 
+#ifndef MIN_LOOP_SIZE
+#define MIN_LOOP_SIZE 0 //Minimum number of residues that must be between two matched residues
+#endif
+
 typedef struct cell {
   int max_value;
   int max_index;
@@ -13,6 +17,8 @@ typedef struct cell {
 void two_vector(char *sequence, int sequence_length, int group_size, int ***traceback_table, int ***score_table);
 void nussinov(char *sequence, int sequence_length, int ***traceback_table, int ***score_table);
 void traceback(char *sequence, int sequence_length, int **traceback_table, int **folded_pairs, int i_start, int j_start);
+
+void read_sequence_from_file_noheaders(char **sequence, int *sequence_length, char *file_path);
 
 /*
   group_size: the size of the preprocessing group 

@@ -2,6 +2,7 @@
 #include "foldingc.h"
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 /**
  *  HELPERS START
@@ -204,6 +205,46 @@ void print_aligned_output_to_file(int sequence_length, char *sequence, int *fold
   fclose(f_out);
 }
 
+void read_sequence_from_file_noheaders(char **sequence, int *sequence_length, char *file_path) {
+  FILE* file = fopen(file_path, "r");
+  char *z;
+  int number_of_lines=0;
+  char *line = (char *)malloc(MAXLINE*sizeof(char));;
+  
+  z = fgets(line, sizeof(line), file);
+  
+  
+  while(z!=NULL){
+    number_of_lines ++;
+    z = fgets(line, sizeof(line), file);
+  }
+  
+  fclose(file);
+  file = fopen(file_path, "r");
+  char *seq = (char *)malloc(MAXLINE*number_of_lines*sizeof(char));
+  
+  z = fgets(line, sizeof(line), file);
+  while(z!=NULL){
+    if(line[strlen(line)-2]=='\r'){//Windows line ending \r\n
+				line[strlen(line)-2]='\0';
+				strcat(seq, line);
+			}
+      else if(line[strlen(line)-1]=='\n'){//Linux line ending \n
+			  line[strlen(line)-1]='\0';
+        strcat(seq, line);
+      }
+			else// No newline character (may happen for last seq)
+				strcat(seq, line);
+		line[0]='\0';
+    z = fgets(line, sizeof(line), file);
+  }
+  
+  fclose(file);
+  free(line);
+  *sequence = seq;
+  *sequence_length = (int) strlen(seq);
+}
+
 void two_vector(char *sequence, int sequence_length, int group_size, int ***traceback_table, int ***score_table) {
   cell ***preprocessed_table;
   int preprocessed_table_dimension = pow(2, group_size - 1);
@@ -238,7 +279,12 @@ void two_vector(char *sequence, int sequence_length, int group_size, int ***trac
     score[min(j+1, sequence_length - 1)][j] = 0;
     traceback[j][j] = -2;
     traceback[min(j+1, sequence_length - 1)][j] = -2;
-    for (i = j - 1; i >= 0; i--) {
+    for(i = 0; i<MIN_LOOP_SIZE; i++){
+      score[max(0, j-1-i)][j] = 0;
+      traceback[max(0, j-1-i)][j] = 0;
+    }
+    
+    for (i = j - 1 - MIN_LOOP_SIZE; i >= 0; i--) {
       score[i][j] = get_binding_score(sequence, i, j) + score[i+1][j-1]; // assume score to be 1 for now 
       // TODO
       cells_to_compare = (j-i-1);
@@ -300,7 +346,12 @@ void nussinov(char *sequence, int sequence_length, int ***traceback_table, int *
     score[min(j+1, sequence_length - 1)][j] = 0;
     traceback[j][j] = -2;
     traceback[min(j+1, sequence_length - 1)][j] = -2;
-    for (i = j - 1; i >= 0; i--) {
+    for(i = 0; i<MIN_LOOP_SIZE; i++){
+      score[max(0, j-1-i)][j] = 0;
+      traceback[max(0, j-1-i)][j] = 0;
+    }
+    
+    for (i = j - 1 - MIN_LOOP_SIZE; i >= 0; i--) {
       score[i][j] = get_binding_score(sequence, i, j) + score[i+1][j-1];
       cells_to_compare = (j-i-1);
       for(k=1; k<=cells_to_compare; k++){
@@ -434,3 +485,5 @@ void test_helpers() {
     printf("two vector helper, get_current_group_right_bound, test 8: passed\n");
   }
 }
+
+

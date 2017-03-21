@@ -126,12 +126,35 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
     int **score_table;
     
     
-    read_sequence_from_file(&sequence, &sequence_length, file_path);
+    read_sequence_from_file_noheaders(&sequence, &sequence_length, file_path);
     int *folded_pairs = (int *) malloc(sequence_length * sizeof(int));
     
     if (option == 3) {
       test_preprocessed_table();
       test_two_vector();
+      int group_size = log(sequence_length);
+      if(group_size ==0){
+        group_size =1;
+      }
+      two_vector(sequence, sequence_length, group_size, &traceback_table, &score_table);
+      
+      int **traceback_table_2;
+      int **score_table_2;
+      nussinov(sequence, sequence_length, &traceback_table_2, &score_table_2); 
+      bool checked;
+      print_tables(sequence_length, score_table, traceback_table);
+      print_tables(sequence_length, score_table_2, traceback_table_2);
+      checked = test_compare_two_tables(traceback_table, traceback_table_2, sequence_length);
+      if(checked == true)
+        printf("The traceback tables are the same\n");
+      else
+        printf("The traceback tables are different\n");
+      checked = test_compare_two_tables(score_table, score_table_2, sequence_length);
+      if(checked == true)
+        printf("The score tables are the same\n");
+      else
+        printf("The score tables are different\n");
+      
     }
     else if (option == 2) {
       int group_size = log(sequence_length);

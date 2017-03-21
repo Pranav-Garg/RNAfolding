@@ -13,7 +13,7 @@ extern "C" {
 
 #include "foldingcpp.h"		//This library will contain all C++ functions
 
-const int EXPECTED_ARGUMENT_COUNT = 3;
+const int EXPECTED_ARGUMENT_COUNT = 4;
 
 void print_usage() {
   printf("expected arguments:\n");
@@ -22,6 +22,8 @@ void print_usage() {
   printf("  -> 2: Two Vector\n");
   printf("* second argument is\n");
   printf("  -> path to file containing the RNA sequence\n");
+  printf("* third argument is\n");
+  printf("  -> path to output file to write folded sequence in BPSEQ format\n");
 }
 
 void test_preprocessed_table() {
@@ -97,13 +99,16 @@ void read_sequence_from_file(char **sequence, int *sequence_length, char *file_p
 }
 
 /*
-  expect two command line arguments, 
+  expect three command line arguments, 
   - first argument is
     -> 1: Nussinov
     -> 2: Two Vector
     -> 3: Testing
   - second argument is
     -> path to file containing the RNA sequence
+    
+  - third argument is
+    -> path to output file that stores matches in BPSEQ format
 */
 int main(int argument_count, char *arguments[]) //Let the program be run with input arguments. 1=Nussinov 2=Two Vector no arguments=ask the user
 {
@@ -113,6 +118,7 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
   else {
     int option = atoi(arguments[1]);
     char *file_path = arguments[2];
+    char *output_file_path = arguments[3];
     char *sequence;
     int sequence_length;
     
@@ -121,6 +127,8 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
     
     
     read_sequence_from_file(&sequence, &sequence_length, file_path);
+    int *folded_pairs = (int *) malloc(sequence_length * sizeof(int));
+    
     if (option == 3) {
       test_preprocessed_table();
       test_two_vector();
@@ -131,12 +139,26 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
         group_size =1;
       }
       two_vector(sequence, sequence_length, group_size, &traceback_table, &score_table);
-      print_tables(sequence_length, score_table, traceback_table);
       
+      //print_tables(sequence_length, score_table, traceback_table);
+      
+      traceback(sequence, sequence_length, traceback_table, &folded_pairs, 0, sequence_length -1);
+      
+      
+      print_aligned_output(sequence_length, sequence, folded_pairs);
+      print_aligned_output_to_file(sequence_length, sequence, folded_pairs, output_file_path);
       printf("Best folding score is: %d\n", score_table[0][sequence_length-1]);
     }
     else if (option == 1) {
-
+      nussinov(sequence, sequence_length, &traceback_table, &score_table);
+      
+      //print_tables(sequence_length, score_table, traceback_table);
+      
+      traceback(sequence, sequence_length, traceback_table, &folded_pairs, 0, sequence_length -1);
+      
+      print_aligned_output(sequence_length, sequence, folded_pairs);
+      print_aligned_output_to_file(sequence_length, sequence, folded_pairs, output_file_path);
+      printf("Best folding score is: %d\n", score_table[0][sequence_length-1]);
     }
     free(sequence);
   }

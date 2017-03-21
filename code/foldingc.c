@@ -82,12 +82,14 @@ int get_current_group_right_bound(int row_index, int column_index, int group_siz
 char complement(char c){
   if(c=='A')
     return 'U';
-  if(c=='C')
+  else if(c=='C')
     return 'G';
-  if(c=='G')
+  else if(c=='G')
     return 'C';
-  if(c=='U')
+  else if(c=='U')
     return 'A';
+  else
+    return 'A'; //should never happen with a proper sequence. Maybe add a function to check the input.
 }
 
 void compare(int *list, int length, int *value, int *argument){
@@ -171,7 +173,7 @@ void preprocess(int group_size, cell ****preprocessed_table) {
     }
   }
   *preprocessed_table = table;
-};
+}
 
 // assume this simple scoring scheme for now TODO
 int get_binding_score(char *sequence, int i, int j) {
@@ -181,6 +183,26 @@ int get_binding_score(char *sequence, int i, int j) {
   return 0;
 }
 
+void print_aligned_output(int sequence_length, char *sequence, int *folded_pairs){
+  int i;
+  printf("\n");
+  for(i=0; i<sequence_length; i++){
+    printf("%d %c %d\n", i+1, sequence[i], folded_pairs[i]);
+    
+  }
+  printf("\n");
+}
+
+void print_aligned_output_to_file(int sequence_length, char *sequence, int *folded_pairs, char *output_file_path){
+  FILE *f_out = fopen(output_file_path, "w");
+  int i;
+  
+  for(i=0; i<sequence_length; i++){
+    fprintf(f_out, "%d %c %d\n", i+1, sequence[i], folded_pairs[i]);
+    
+  }
+  fclose(f_out);
+}
 
 void two_vector(char *sequence, int sequence_length, int group_size, int ***traceback_table, int ***score_table) {
   cell ***preprocessed_table;
@@ -215,6 +237,7 @@ void two_vector(char *sequence, int sequence_length, int group_size, int ***trac
     score[j][j] = 0;
     score[min(j+1, sequence_length - 1)][j] = 0;
     traceback[j][j] = -2;
+    traceback[min(j+1, sequence_length - 1)][j] = -2;
     for (i = j - 1; i >= 0; i--) {
       score[i][j] = get_binding_score(sequence, i, j) + score[i+1][j-1]; // assume score to be 1 for now 
       // TODO
@@ -246,7 +269,13 @@ void two_vector(char *sequence, int sequence_length, int group_size, int ***trac
       traceback_list[0] = -1;
       compare(comparison_list, straggler_number+group_number+1, val, arg);
       score[i][j] = *val;
-      traceback[i][j] = traceback_list[*arg];
+      
+      if(*arg == 0 && comparison_list[0] ==0){
+        traceback[i][j] = 0;
+      }
+      else{
+        traceback[i][j] = traceback_list[*arg];
+      }
     
     }   
   }  
@@ -254,6 +283,69 @@ void two_vector(char *sequence, int sequence_length, int group_size, int ***trac
   *traceback_table = traceback;
   // free preprocessed table memory
   free_preprocessed_table(preprocessed_table, preprocessed_table_dimension);
+}
+
+void nussinov(char *sequence, int sequence_length, int ***traceback_table, int ***score_table) {
+  int **traceback = initialize_square_table(sequence_length);
+  int **score = initialize_square_table(sequence_length);
+  
+  int i, j, k;
+  int cells_to_compare;    //for each cell [i][j], this indicates how far it is from the diagonal
+  int *comparison_list = (int *)malloc(sequence_length*sizeof(int));
+  int *arg = (int *)malloc(sizeof(int));
+  int *val = (int *)malloc(sizeof(int));    //stores maximum value and argument index from comparing
+  
+  for (j = 0; j < sequence_length; j++) {
+    score[j][j] = 0;
+    score[min(j+1, sequence_length - 1)][j] = 0;
+    traceback[j][j] = -2;
+    traceback[min(j+1, sequence_length - 1)][j] = -2;
+    for (i = j - 1; i >= 0; i--) {
+      score[i][j] = get_binding_score(sequence, i, j) + score[i+1][j-1];
+      cells_to_compare = (j-i-1);
+      for(k=1; k<=cells_to_compare; k++){
+        //k is the index used to traverse the row and column simultaneously. k=1 is just next to the diagonal
+        comparison_list[k] = score[i][i+k] + score[i+k][j];
+      }
+      comparison_list[0] = score[i][j];
+      compare(comparison_list, cells_to_compare+1, val, arg);
+      score[i][j] = *val;
+      traceback[i][j] = *arg;
+      if(*arg ==0){
+        if(comparison_list[0] == 0)
+          traceback[i][j] = 0;
+        else
+          traceback[i][j] = -1;
+      }
+    }   
+  }  
+  *score_table = score;
+  *traceback_table = traceback;
+}
+
+void traceback(char *sequence, int sequence_length, int **traceback_table, int **folded_pairs, int i_start, int j_start){
+  int k = traceback_table[i_start][j_start];
+  
+  if (k==-2){
+    return;
+  }
+  
+  else if (k == -1){
+    (*folded_pairs)[i_start] = j_start+1;
+    (*folded_pairs)[j_start] = i_start+1;
+    traceback(sequence, sequence_length, traceback_table, folded_pairs, i_start+1, j_start-1);
+  }
+  
+  else if(k==0){
+    (*folded_pairs)[i_start] = 0;
+    (*folded_pairs)[j_start] = 0;
+    traceback(sequence, sequence_length, traceback_table, folded_pairs, i_start+1, j_start-1);
+  }
+  else{
+    
+    traceback(sequence, sequence_length, traceback_table, folded_pairs, i_start, i_start + k);
+    traceback(sequence, sequence_length, traceback_table, folded_pairs, i_start+k, j_start);
+  }
 }
 
 /**

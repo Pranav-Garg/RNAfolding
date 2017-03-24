@@ -30,7 +30,7 @@ int binary_to_decimal(int *a, int length){
   int dec = 0;
   int i;
   for(i=0; i<length; i++){
-    dec = dec & (a[length -1 -i] << i);
+    dec = dec | (a[length -1 -i] << i);
   }
   
   return dec;
@@ -277,8 +277,8 @@ void two_vector(char *sequence, int sequence_length, int group_size, int ***trac
   for (j = 0; j < sequence_length; j++) {
     score[j][j] = 0;
     score[min(j+1, sequence_length - 1)][j] = 0;
+    traceback[min(j+1, sequence_length - 1)][j] = -3;
     traceback[j][j] = -2;
-    traceback[min(j+1, sequence_length - 1)][j] = -2;
     for(i = 0; i<MIN_LOOP_SIZE; i++){
       score[max(0, j-1-i)][j] = 0;
       traceback[max(0, j-1-i)][j] = 0;
@@ -287,21 +287,21 @@ void two_vector(char *sequence, int sequence_length, int group_size, int ***trac
     for (i = j - 1 - MIN_LOOP_SIZE; i >= 0; i--) {
       score[i][j] = get_binding_score(sequence, i, j) + score[i+1][j-1]; // assume score to be 1 for now 
       // TODO
-      cells_to_compare = (j-i-1);
+      cells_to_compare = (j-i);
       straggler_number = cells_to_compare%group_size;
       group_number = cells_to_compare/group_size;
       for(k=1; k<=straggler_number; k++){
         //k is the index used to traverse the row and column simultaneously. k=1 is just next to the diagonal
-        comparison_list[k] = score[i][i+k] + score[i+k][j];
+        comparison_list[k] = score[i][i+k-1] + score[i+k][j];
         traceback_list[k] = k;
       }
       for(m = 0; m< group_number; m++){
         
-        add_to_rowvect = score[i][i+k];
+        add_to_rowvect = score[i][i+k-1];
     	  add_to_colvect = score[i+k][j];
         
 		    for(l=0; l<group_size-1; l++){
-		      row_difference_vector[l] = score[i][i+k+1+l]-score[i][i+k+l];
+		      row_difference_vector[l] = score[i][i+k+l]-score[i][i+k+l-1];
           col_difference_vector[l] = (score[i+k+1+l][j]-score[i+k+l][j])*-1;
     	  }
     	
@@ -344,8 +344,8 @@ void nussinov(char *sequence, int sequence_length, int ***traceback_table, int *
   for (j = 0; j < sequence_length; j++) {
     score[j][j] = 0;
     score[min(j+1, sequence_length - 1)][j] = 0;
+    traceback[min(j+1, sequence_length - 1)][j] = -3;
     traceback[j][j] = -2;
-    traceback[min(j+1, sequence_length - 1)][j] = -2;
     for(i = 0; i<MIN_LOOP_SIZE; i++){
       score[max(0, j-1-i)][j] = 0;
       traceback[max(0, j-1-i)][j] = 0;
@@ -353,10 +353,10 @@ void nussinov(char *sequence, int sequence_length, int ***traceback_table, int *
     
     for (i = j - 1 - MIN_LOOP_SIZE; i >= 0; i--) {
       score[i][j] = get_binding_score(sequence, i, j) + score[i+1][j-1];
-      cells_to_compare = (j-i-1);
+      cells_to_compare = (j-i);
       for(k=1; k<=cells_to_compare; k++){
-        //k is the index used to traverse the row and column simultaneously. k=1 is just next to the diagonal
-        comparison_list[k] = score[i][i+k] + score[i+k][j];
+        //k is the index used to traverse the row and column simultaneously. k=1 is just below the current cell / diagonal of the row.
+        comparison_list[k] = score[i][i+k-1] + score[i+k][j];
       }
       comparison_list[0] = score[i][j];
       compare(comparison_list, cells_to_compare+1, val, arg);
@@ -378,6 +378,11 @@ void traceback(char *sequence, int sequence_length, int **traceback_table, int *
   int k = traceback_table[i_start][j_start];
   
   if (k==-2){
+    (*folded_pairs)[i_start] = 0;
+    return;
+  }
+  
+  else if (k==-3){
     return;
   }
   
@@ -394,7 +399,7 @@ void traceback(char *sequence, int sequence_length, int **traceback_table, int *
   }
   else{
     
-    traceback(sequence, sequence_length, traceback_table, folded_pairs, i_start, i_start + k);
+    traceback(sequence, sequence_length, traceback_table, folded_pairs, i_start, i_start + k -1);
     traceback(sequence, sequence_length, traceback_table, folded_pairs, i_start+k, j_start);
   }
 }

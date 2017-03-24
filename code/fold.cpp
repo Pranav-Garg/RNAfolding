@@ -130,8 +130,8 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
     int *folded_pairs = (int *) malloc(sequence_length * sizeof(int));
     
     if (option == 3) {
-      test_preprocessed_table();
-      test_two_vector();
+      //test_preprocessed_table();
+      //test_two_vector();
       int group_size = log(sequence_length);
       if(group_size ==0){
         group_size =1;
@@ -142,7 +142,9 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
       int **score_table_2;
       nussinov(sequence, sequence_length, &traceback_table_2, &score_table_2); 
       bool checked;
+      printf("Two-vector tables:\n");
       print_tables(sequence_length, score_table, traceback_table);
+      printf("Nussinov tables:\n");
       print_tables(sequence_length, score_table_2, traceback_table_2);
       checked = test_compare_two_tables(traceback_table, traceback_table_2, sequence_length);
       if(checked == true)

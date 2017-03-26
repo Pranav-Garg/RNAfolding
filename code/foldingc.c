@@ -219,6 +219,7 @@ void read_sequence_from_file_noheaders(char **sequence, int *sequence_length, ch
   }
 
   fclose(file);
+  printf("Number of lines %u\n", number_of_lines);
   file = fopen(file_path, "r");
   char *seq = (char *)malloc(MAXLINE*number_of_lines*sizeof(char));
 

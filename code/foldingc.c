@@ -208,21 +208,20 @@ void print_aligned_output_to_file(int sequence_length, char *sequence, int *fold
 void read_sequence_from_file_noheaders(char **sequence, int *sequence_length, char *file_path) {
   FILE* file = fopen(file_path, "r");
   char *z;
-  int number_of_lines=0;
+  int number_of_lines=1;
   char *line = (char *)malloc(MAXLINE*sizeof(char));;
   
-  z = fgets(line, sizeof(line), file);
-  
-  
-  while(z!=NULL){
-    number_of_lines ++;
-    z = fgets(line, sizeof(line), file);
+  int ch;
+  while (EOF != (ch=getc(file))){
+    if ('\n' == ch){
+      ++number_of_lines;
+    }
   }
-  
+
   fclose(file);
   file = fopen(file_path, "r");
   char *seq = (char *)malloc(MAXLINE*number_of_lines*sizeof(char));
-  
+
   z = fgets(line, sizeof(line), file);
   while(z!=NULL){
     if(line[strlen(line)-2]=='\r'){//Windows line ending \r\n

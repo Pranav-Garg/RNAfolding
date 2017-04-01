@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <cstring>
 #include <math.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 using namespace std;
 
@@ -20,6 +22,7 @@ void print_usage() {
   printf("* first argument is\n");
   printf("  -> 1: Nussinov\n");
   printf("  -> 2: Two Vector\n");
+  printf("  -> 3: Compare Nussinov and Two Vector runtime\n");
   printf("* second argument is\n");
   printf("  -> path to file containing the RNA sequence\n");
   printf("* third argument is\n");
@@ -103,7 +106,8 @@ void read_sequence_from_file(char **sequence, int *sequence_length, char *file_p
   - first argument is
     -> 1: Nussinov
     -> 2: Two Vector
-    -> 3: Testing
+    -> 3: Compare Nussinov and Two Vector
+    -> 4: Testing
   - second argument is
     -> path to file containing the RNA sequence
     
@@ -129,7 +133,7 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
     read_sequence_from_file_noheaders(&sequence, &sequence_length, file_path);
     int *folded_pairs = (int *) malloc(sequence_length * sizeof(int));
     
-    if (option == 3) {
+    if (option == 4) {
       //test_preprocessed_table();
       //test_two_vector();
       int group_size = log(sequence_length);
@@ -158,15 +162,35 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
         printf("The score tables are different\n");
       
     }
+    else if (option == 3) {
+      int group_size = log(sequence_length);
+      if(group_size ==0){group_size =1;}
+      struct rusage nussinov_start, nussinov_end;
+      struct rusage two_vector_start, two_vector_end;
+
+      getrusage(RUSAGE_SELF, &nussinov_start);
+      nussinov(sequence, sequence_length, &traceback_table, &score_table);
+      traceback(sequence, sequence_length, traceback_table, &folded_pairs, 0, sequence_length -1);
+      getrusage(RUSAGE_SELF, &nussinov_end);
+      printf("Best folding score is: %d\n", score_table[0][sequence_length-1]);
+      
+      double nussinov_runtime = (nussinov_end.ru_utime.tv_sec - nussinov_start.ru_utime.tv_sec) + 1e-6*(nussinov_end.ru_utime.tv_usec - nussinov_start.ru_utime.tv_usec);
+
+      getrusage(RUSAGE_SELF, &two_vector_start);
+      two_vector(sequence, sequence_length, group_size, &traceback_table, &score_table);
+      traceback(sequence, sequence_length, traceback_table, &folded_pairs, 0, sequence_length -1);
+      getrusage(RUSAGE_SELF, &two_vector_end);
+
+      double two_vector_runtime = (two_vector_end.ru_utime.tv_sec - two_vector_start.ru_utime.tv_sec) + 1e-6*(two_vector_end.ru_utime.tv_usec - two_vector_start.ru_utime.tv_usec);
+
+      printf("Speed up (runtime of nussinov / runtime of two vector): %.5f\n", two_vector_runtime / nussinov_runtime);
+    }
     else if (option == 2) {
       int group_size = log(sequence_length);
       if(group_size ==0){
         group_size =1;
       }
       two_vector(sequence, sequence_length, group_size, &traceback_table, &score_table);
-      
-      //print_tables(sequence_length, score_table, traceback_table);
-      
       traceback(sequence, sequence_length, traceback_table, &folded_pairs, 0, sequence_length -1);
       
       
@@ -176,9 +200,6 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
     }
     else if (option == 1) {
       nussinov(sequence, sequence_length, &traceback_table, &score_table);
-      
-      //print_tables(sequence_length, score_table, traceback_table);
-      
       traceback(sequence, sequence_length, traceback_table, &folded_pairs, 0, sequence_length -1);
       
       print_aligned_output(sequence_length, sequence, folded_pairs);

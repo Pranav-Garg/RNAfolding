@@ -250,12 +250,6 @@ void two_vector(char *sequence, int sequence_length, int group_size, int ***trac
   int preprocessed_table_dimension = pow(2, group_size - 1);
   preprocess(group_size, &preprocessed_table);
 
-  // test
-  printf("test accessing preprocessed table value: %d\n", preprocessed_table[0][0]->max_value);
-  printf("sequence: %s\n", sequence);
-  printf("sequence length: %d\n", sequence_length);
-  printf("group size: %d\n", group_size);
-  
   int **traceback = initialize_square_table(sequence_length);
   int **score = initialize_square_table(sequence_length);
   

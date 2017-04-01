@@ -223,9 +223,14 @@ void read_sequence_from_file_noheaders(char **sequence, int *sequence_length, ch
   
   fclose(file);
 
-  sequence_buffer[file_size - 1] = '\0';
+  int i;
+  for (i = 0; i < file_size; i++) {
+    if (sequence_buffer[i] == '\r' || sequence_buffer[i] == '\n') {
+      sequence_buffer[i] = '\0';
+    }
+  }
   *sequence = sequence_buffer;
-  *sequence_length = file_size - 1;
+  *sequence_length = i;
 }
 
 void two_vector(char *sequence, int sequence_length, int group_size, int ***traceback_table, int ***score_table) {

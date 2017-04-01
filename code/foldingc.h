@@ -6,7 +6,7 @@
 #endif
 
 #ifndef MIN_LOOP_SIZE
-#define MIN_LOOP_SIZE 0 //Minimum number of residues that must be between two matched residues
+#define MIN_LOOP_SIZE 5 //Minimum number of residues that must be between two matched residues
 #endif
 
 typedef struct cell {

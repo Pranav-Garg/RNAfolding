@@ -271,12 +271,12 @@ void two_vector(char *sequence, int sequence_length, int group_size, int ***trac
   for (j = 0; j < sequence_length; j++) {
     score[j][j] = 0;
     score[min(j+1, sequence_length - 1)][j] = 0;
-    traceback[min(j+1, sequence_length - 1)][j] = -3;
-    traceback[j][j] = -2;
     for(i = 0; i<MIN_LOOP_SIZE; i++){
       score[max(0, j-1-i)][j] = 0;
       traceback[max(0, j-1-i)][j] = 0;
     }
+    traceback[min(j+1, sequence_length - 1)][j] = -3;
+    traceback[j][j] = -2;
     
     for (i = j - 1 - MIN_LOOP_SIZE; i >= 0; i--) {
       score[i][j] = get_binding_score(sequence, i, j) + score[i+1][j-1]; // assume score to be 1 for now 
@@ -338,12 +338,12 @@ void nussinov(char *sequence, int sequence_length, int ***traceback_table, int *
   for (j = 0; j < sequence_length; j++) {
     score[j][j] = 0;
     score[min(j+1, sequence_length - 1)][j] = 0;
-    traceback[min(j+1, sequence_length - 1)][j] = -3;
-    traceback[j][j] = -2;
     for(i = 0; i<MIN_LOOP_SIZE; i++){
       score[max(0, j-1-i)][j] = 0;
       traceback[max(0, j-1-i)][j] = 0;
     }
+    traceback[min(j+1, sequence_length - 1)][j] = -3;
+    traceback[j][j] = -2;
     
     for (i = j - 1 - MIN_LOOP_SIZE; i >= 0; i--) {
       score[i][j] = get_binding_score(sequence, i, j) + score[i+1][j-1];

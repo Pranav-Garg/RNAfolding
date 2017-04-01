@@ -206,43 +206,26 @@ void print_aligned_output_to_file(int sequence_length, char *sequence, int *fold
 }
 
 void read_sequence_from_file_noheaders(char **sequence, int *sequence_length, char *file_path) {
-  FILE* file = fopen(file_path, "r");
-  char *z;
-  int number_of_lines=1;
-  char *line = (char *)malloc(MAXLINE*sizeof(char));;
-  
-  int ch;
-  while (EOF != (ch=getc(file))){
-    if ('\n' == ch){
-      ++number_of_lines;
-    }
-  }
+  char *sequence_buffer;
+  FILE *file;
+  unsigned long file_size;
+  //Open file
+  file = fopen(file_path, "rb");
 
-  fclose(file);
-  printf("Number of lines %u\n", number_of_lines);
-  file = fopen(file_path, "r");
-  char *seq = (char *)malloc(MAXLINE*number_of_lines*sizeof(char));
+  //Get file length
+  fseek(file, 0, SEEK_END);
+  file_size = ftell(file);
+  fseek(file, 0, SEEK_SET);
 
-  z = fgets(line, sizeof(line), file);
-  while(z!=NULL){
-    if(line[strlen(line)-2]=='\r'){//Windows line ending \r\n
-				line[strlen(line)-2]='\0';
-				strcat(seq, line);
-			}
-      else if(line[strlen(line)-1]=='\n'){//Linux line ending \n
-			  line[strlen(line)-1]='\0';
-        strcat(seq, line);
-      }
-			else// No newline character (may happen for last seq)
-				strcat(seq, line);
-		line[0]='\0';
-    z = fgets(line, sizeof(line), file);
-  }
+  sequence_buffer = (char *) malloc(file_size);
+  /* read and send buffer */
+  fread(sequence_buffer, file_size, 1, file);
   
   fclose(file);
-  free(line);
-  *sequence = seq;
-  *sequence_length = (int) strlen(seq);
+
+  sequence_buffer[file_size - 1] = '\0';
+  *sequence = sequence_buffer;
+  *sequence_length = file_size - 1;
 }
 
 void two_vector(char *sequence, int sequence_length, int group_size, int ***traceback_table, int ***score_table) {

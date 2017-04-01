@@ -129,8 +129,9 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
     int **traceback_table;
     int **score_table;
     
-    
+    printf("reading file...\n");    
     read_sequence_from_file_noheaders(&sequence, &sequence_length, file_path);
+    printf("sequence is %s\n", sequence);
     int *folded_pairs = (int *) malloc(sequence_length * sizeof(int));
     
     if (option == 4) {
@@ -175,7 +176,7 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
       printf("Best folding score is: %d\n", score_table[0][sequence_length-1]);
       
       double nussinov_runtime = (nussinov_end.ru_utime.tv_sec - nussinov_start.ru_utime.tv_sec) + 1e-6*(nussinov_end.ru_utime.tv_usec - nussinov_start.ru_utime.tv_usec);
-      printf("Rune time for nussinov: %.5f\n", nussinov_runtime);
+      printf("Run time for nussinov: %.5f\n\n", nussinov_runtime);
 
       getrusage(RUSAGE_SELF, &two_vector_start);
       two_vector(sequence, sequence_length, group_size, &traceback_table, &score_table);
@@ -184,9 +185,9 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
       printf("Best folding score is: %d\n", score_table[0][sequence_length-1]);
 
       double two_vector_runtime = (two_vector_end.ru_utime.tv_sec - two_vector_start.ru_utime.tv_sec) + 1e-6*(two_vector_end.ru_utime.tv_usec - two_vector_start.ru_utime.tv_usec);
-      printf("Rune time for two vector: %.5f\n", two_vector_runtime);
+      printf("Run time for two vector: %.5f\n\n", two_vector_runtime);
 
-      printf("Speed up (runtime of nussinov / runtime of two vector): %.5f\n", two_vector_runtime / nussinov_runtime);
+      printf("Speed up (runtime of nussinov / runtime of two vector): %.5f\n", nussinov_runtime / two_vector_runtime);
     }
     else if (option == 2) {
       int group_size = log(sequence_length);

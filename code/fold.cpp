@@ -30,8 +30,9 @@ void print_usage() {
 }
 
 void test_preprocessed_table() {
-  cell ***preprocessed_table;
+  cell *preprocessed_table;
   int group_size = 5;
+  int table_dimension = pow(2, group_size - 1);
   preprocess(group_size, &preprocessed_table);  
   // a couple tests
   /**
@@ -42,9 +43,9 @@ void test_preprocessed_table() {
   *  (4) k == 3, sum_1 == 0+1+1+1,   sum_2 == 0+0-1+0,   max_val == 2, max_index == 3
   *  (5) k == 4, sum_1 == 0+1+1+1+0, sum_2 == 0+0-1+0+0, max_val == 2, max_index == 3
   */
-  if (preprocessed_table[14][4]->max_value != 2 || preprocessed_table[14][4]->max_index != 3) {
+  if (preprocessed_table[14 * table_dimension + 4].max_value != 2 || preprocessed_table[14 * table_dimension + 4].max_index != 3) {
     printf("ERROR: expected (max_value == 2, max_index == 3)\n");
-    printf("       but received (max_value == %d, max_index == %d\n", preprocessed_table[14][4]->max_value, preprocessed_table[14][4]->max_index);
+    printf("       but received (max_value == %d, max_index == %d\n", preprocessed_table[14 * table_dimension + 4].max_value, preprocessed_table[14 * table_dimension + 4].max_index);
   }
   else {
     printf("preprocessd table test 1: passed\n");
@@ -57,9 +58,9 @@ void test_preprocessed_table() {
   *  (4) k == 3, sum_1 == 0+0+1+1,   sum_2 == 0-1-1+0,   max_val == 0, max_index == 0
   *  (5) k == 4, sum_1 == 0+0+1+1+1, sum_2 == 0-1-1+0+0, max_val == 1, max_index == 4
   */
-  if (preprocessed_table[7][12]->max_value != 1 || preprocessed_table[7][12]->max_index != 4) {
+  if (preprocessed_table[7 * table_dimension + 12].max_value != 1 || preprocessed_table[7 * table_dimension + 12].max_index != 4) {
     printf("ERROR: expected (max_value == 1, max_index == 4)\n");
-    printf("       but received (max_value == %d, max_index == %d\n", preprocessed_table[7][12]->max_value, preprocessed_table[7][12]->max_index);
+    printf("       but received (max_value == %d, max_index == %d\n", preprocessed_table[7 * table_dimension + 12].max_value, preprocessed_table[7 * table_dimension + 12].max_index);
   }
   else {
     printf("preprocessd table test 2: passed\n");
@@ -73,8 +74,8 @@ void test_two_vector() {
   char *sequence = (char *) "UACGCGUCAAUAACGCUA";
   int sequence_length = 18;
   int group_size = 5;
-  int **traceback_table;
-  int **score_table;
+  int *traceback_table;
+  int *score_table;
   two_vector(sequence, sequence_length, group_size, &traceback_table, &score_table);
 }
 
@@ -126,8 +127,8 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
     char *sequence;
     int sequence_length;
     
-    int **traceback_table;
-    int **score_table;
+    int *traceback_table;
+    int *score_table;
     
     printf("reading file...\n");    
     read_sequence_from_file_noheaders(&sequence, &sequence_length, file_path);
@@ -143,8 +144,8 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
       }
       two_vector(sequence, sequence_length, group_size, &traceback_table, &score_table);
       
-      int **traceback_table_2;
-      int **score_table_2;
+      int *traceback_table_2;
+      int *score_table_2;
       nussinov(sequence, sequence_length, &traceback_table_2, &score_table_2); 
       bool checked;
       printf("Two-vector tables:\n");
@@ -164,7 +165,7 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
       
     }
     else if (option == 3) {
-      int group_size = log(sequence_length);
+      int group_size = log(sequence_length) / log(2);
       if(group_size ==0){group_size =1;}
       struct rusage nussinov_start, nussinov_end;
       struct rusage two_vector_start, two_vector_end;
@@ -173,7 +174,7 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
       nussinov(sequence, sequence_length, &traceback_table, &score_table);
       traceback(sequence, sequence_length, traceback_table, &folded_pairs, 0, sequence_length -1);
       getrusage(RUSAGE_SELF, &nussinov_end);
-      printf("Best folding score is: %d\n", score_table[0][sequence_length-1]);
+      printf("Best folding score is: %d\n", score_table[sequence_length-1]);
       
       double nussinov_runtime = (nussinov_end.ru_utime.tv_sec - nussinov_start.ru_utime.tv_sec) + 1e-6*(nussinov_end.ru_utime.tv_usec - nussinov_start.ru_utime.tv_usec);
       printf("Run time for nussinov: %.5f\n\n", nussinov_runtime);
@@ -182,7 +183,7 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
       two_vector(sequence, sequence_length, group_size, &traceback_table, &score_table);
       traceback(sequence, sequence_length, traceback_table, &folded_pairs, 0, sequence_length -1);
       getrusage(RUSAGE_SELF, &two_vector_end);
-      printf("Best folding score is: %d\n", score_table[0][sequence_length-1]);
+      printf("Best folding score is: %d\n", score_table[sequence_length-1]);
 
       double two_vector_runtime = (two_vector_end.ru_utime.tv_sec - two_vector_start.ru_utime.tv_sec) + 1e-6*(two_vector_end.ru_utime.tv_usec - two_vector_start.ru_utime.tv_usec);
       printf("Run time for two vector: %.5f\n\n", two_vector_runtime);
@@ -200,7 +201,7 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
       
       print_aligned_output(sequence_length, sequence, folded_pairs);
       print_aligned_output_to_file(sequence_length, sequence, folded_pairs, output_file_path);
-      printf("Best folding score is: %d\n", score_table[0][sequence_length-1]);
+      printf("Best folding score is: %d\n", score_table[sequence_length-1]);
     }
     else if (option == 1) {
       nussinov(sequence, sequence_length, &traceback_table, &score_table);
@@ -208,7 +209,7 @@ int main(int argument_count, char *arguments[]) //Let the program be run with in
       
       print_aligned_output(sequence_length, sequence, folded_pairs);
       print_aligned_output_to_file(sequence_length, sequence, folded_pairs, output_file_path);
-      printf("Best folding score is: %d\n", score_table[0][sequence_length-1]);
+      printf("Best folding score is: %d\n", score_table[sequence_length-1]);
     }
     free(sequence);
   }

@@ -9,6 +9,6 @@ void nussinov(string &sequence, int** score_table, int** traceback_table); // -1
 void trace_back(string &sequence, int** score_table, int** traceback_table, int* match_table);
 */
 
-bool test_compare_two_tables(int **table, int **table_2, int sequence_length);
+bool test_compare_two_tables(int *table, int *table_2, int sequence_length);
 
 #endif

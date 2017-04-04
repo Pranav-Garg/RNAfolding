@@ -249,7 +249,7 @@ void two_vector(char *sequence, int sequence_length, int group_size, int **trace
   int *arg = (int *)malloc(sizeof(int));
   int *val = (int *)malloc(sizeof(int));    //stores maximum value and argument index from comparing
   
-  printf("with group size %d, bit mast is %u, left mos bit mask is %u\n", group_size, group_bit_mask, left_most_bit_mask);
+  //printf("with group size %d, bit mast is %u, left mos bit mask is %u\n", group_size, group_bit_mask, left_most_bit_mask);
   for (j = 0; j < sequence_length; j++) {
     score[j * sequence_length + j] = 0;
     score[min(j+1, sequence_length - 1) * sequence_length + j] = 0;
